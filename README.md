@@ -23,14 +23,14 @@
 
 ### Common Windows Error:
 
-**Error:** -bash: ./run-compose.sh: /bin/bash^M: bad interpreter: No such file or directory
+**Error:** -bash: ./entrypoint.sh: /bin/bash^M: bad interpreter: No such file or directory
 
 Or other .sh files
 
 **Fix:** This error occurs due to Windows behavior that modifies files to have Windows line endings (CRLF). To fix this, change the line endings back to LF. One way to do this is by using the sed command:
 
 ```
-sed -i -e 's/\r$//' run-compose.sh
+sed -i -e 's/\r$//' entrypoint.sh
 ```
 
 If you face issue, just message Mark.
