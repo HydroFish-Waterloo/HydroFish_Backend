@@ -20,5 +20,6 @@ from django.urls import include
 
 urlpatterns = [
     path("hydrofish/", include("backend_app.urls")),
+    path("authentication/", include("backend_app.urls")),
     path('admin/', admin.site.urls),
 ]
