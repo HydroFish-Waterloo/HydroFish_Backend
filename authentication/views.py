@@ -36,7 +36,13 @@ class RegisterAPIView(APIView):
         username = request.data.get("username")
         password = request.data.get("password")
         
-        form = UserCreationForm(data={'username': username, 'password': password})
+        form_data = {
+            'username': username, 
+            'password1': password, 
+            'password2': password,  # Assuming the API doesn't separate password & confirmation
+        }
+        
+        form = UserCreationForm(form_data)
         
         if form.is_valid():
             user = form.save()
