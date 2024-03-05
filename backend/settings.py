@@ -39,9 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'backend_app',
+    'authentication',
     'rest_framework',
     'rest_framework.authtoken',
-    'authentication',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +54,18 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {  # configure the default authentication classes to include token authentication [mar 2, arthur]
+    # This means DRF will expect a valid token to be included in the Authorization header of requests to your API."""
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+
+    # the API will only be accessible to authenticated users """
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -131,8 +144,3 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # Add this line
-    ],
-}
