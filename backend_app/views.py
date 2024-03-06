@@ -20,6 +20,7 @@
 
 
 from datetime import datetime, timedelta
+from django.utils import timezone
 import json
 from django.db.models import F
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -64,14 +65,46 @@ class GetWaterHistory(APIView):
         if not water_intake_records.exists():
             return JsonResponse({'status': 'success', 'intake_records': []})
 
-        intake_records = [
-            {
-                'date': record.date.strftime('%Y-%m-%d'),
-                'water_amount': record.water_amount
-            } for record in water_intake_records
-        ]
+        intake_records = {
+            record.date.astimezone(timezone.get_current_timezone()).strftime("%a %b %d %H:%M:%S %Y %z"): record.water_amount
+            for record in water_intake_records
+        }
         
-        return JsonResponse({'status': 'success', 'intake_records': intake_records}, safe=False)
+        return JsonResponse({'status': 'success', 'hitsory': intake_records}, safe=False)
+
+# class GetWaterHistory(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     @csrf_exempt
+#     def get(self, request):
+#         date_str = request.GET.get('date', None)
+
+#         if date_str:
+00#                 date = datetime.strptime(date_str, '%Y-%m-%d').date()
+#             except ValueError:
+#                 return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+#         else:
+#             return JsonResponse({'status': 'error', 'message': 'Date parameter is required.'}, status=400)
+
+#         start_date = date - timedelta(days=90)
+#         end_date = datetime.combine(date, datetime.max.time())
+#         water_intake_records = WaterIntake.objects.filter(
+#             user=request.user, 
+#             date__gte=start_date, 
+#             date__lte=end_date
+#         ).order_by('date')
+                
+#         if not water_intake_records.exists():
+#             return JsonResponse({'status': 'success', 'intake_records': []})
+
+#         intake_records = [
+#             {
+#                 'date': record.date.strftime('%Y-%m-%d'),
+#                 'water_amount': record.water_amount
+#             } for record in water_intake_records
+#         ]
+        
+#         return JsonResponse({'status': 'success', 'intake_records': intake_records}, safe=False)
 
 class GetFishNumber(APIView):
     permission_classes = [IsAuthenticated]
