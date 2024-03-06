@@ -19,7 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path("hydrofish/", include("backend_app.urls")),
-    path("authentication/", include("backend_app.urls")),
     path('users/', include('authentication.urls')),
     path('admin/', admin.site.urls),
 ]
