@@ -29,7 +29,8 @@ class LoginAPIView(APIView):
             return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
         
 
-
+### handle register logic
+# Endpoint :/api/register
 class RegisterAPIView(APIView):
     permission_classes = [AllowAny]  # Allow unauthenticated users to access this view for registration
 
