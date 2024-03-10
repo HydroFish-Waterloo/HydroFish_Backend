@@ -56,6 +56,24 @@ def record_intake(request):
     WaterIntake.objects.create(user=request.user, date=date, water_amount=water_amount)
     return JsonResponse({'status': 'success', 'message': 'Water intake record created successfully'})
 
+# fetch 3 days history data
+# endpoint: /api/get_history_3days
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_3days_water_intake(request):
+    """Create an endpoint to return the last 3 days of water intake data, aggregated by day."""
+    today = timezone.now().date()
+    a_week_ago = today - timezone.timedelta(days=3)
+    data = WaterIntake.objects.filter(user=request.user, date__date__range=[a_week_ago, today]) \
+                              .annotate(day=TruncDay('date')) \
+                              .values('day') \
+                              .annotate(total_ml=Sum('water_amount')) \
+                              .order_by('day')
+
+    if not data:
+        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 3 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
 # fetch weekly(last 7 dyas) history data
 # endpoint: /api/get_history_weekly/
@@ -73,9 +91,28 @@ def get_weekly_water_intake(request):
 
     if not data:
         return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 7 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
-    return JsonResponse({'status': 'success', 'data': list(data)})
 
+# returns the monthly water intake data for the logged-in user.
+# endpoint: /api/get_history_monthly/
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_monthly_water_intake(request):
+    """Create an endpoint to return the last 30 days of water intake data, aggregated by day."""
+    today = timezone.now().date()
+    a_month_ago = today - timezone.timedelta(days=30)
+    data = WaterIntake.objects.filter(user=request.user, date__date__range=[a_month_ago, today]) \
+                              .annotate(day=TruncDay('date')) \
+                              .values('day') \
+                              .annotate(total_ml=Sum('water_amount')) \
+                              .order_by('day')
+
+    if not data:
+        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 30 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
 
 class GetFishNumber(APIView):
