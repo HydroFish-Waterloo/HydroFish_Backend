@@ -24,15 +24,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # Assuming you have a user with username 'arthur2'
+        name='arthur3'
+        password='147258@@@'
+
         User = get_user_model()
         # Check if the user exists, otherwise create it
-        user, created = User.objects.get_or_create(username='arthur2')
+        user, created = User.objects.get_or_create(username= name)
         if created:
-            user.set_password('147258@@@')  # Set the password for the new user
+            user.set_password(password)  # Set the password for the new user
             user.save()
-            print('User "arthur2" has been created.')
+            print('### User "', name , '", password=' , password, '. created OK.')
         else:
-            print('User "arthur2" already exists, no need to creat.')
+            print('### User "', name , '" already exists, no need to creat.')
 
         start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)
         
@@ -46,6 +49,6 @@ class Command(BaseCommand):
                 WaterIntake.objects.create(user=user, date=make_aware(intake_time), water_amount=intake_amount)
                 daily_total += intake_amount
 
-        print('Successfully generated water intake data for', f'{how_many_days}', 'days.')
+        print('### Successfully generated water intake data for recent ', f'{how_many_days}', 'days.')
 
 
