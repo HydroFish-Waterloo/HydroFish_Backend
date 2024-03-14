@@ -24,7 +24,10 @@ class LoginAPIView(APIView):
         user = authenticate(username=username, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
+            return Response({
+                    "token": token.key,
+                    "username": user.username
+            }, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -36,12 +39,13 @@ class RegisterAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         username = request.data.get("username")
-        password = request.data.get("password")
-
+        password1 = request.data.get("password1")
+        password2 = request.data.get("password2")
+        
         form_data = {
             'username': username,
-            'password1': password,
-            'password2': password,  # Assuming the API doesn't separate password & confirmation
+            'password1': password1,
+            'password2': password2,  # Assuming the API doesn't separate password & confirmation
         }
 
         form = UserCreationForm(form_data)
@@ -53,7 +57,10 @@ class RegisterAPIView(APIView):
             user_level = UserLevel(user=user, level=1)
             user_level.save()
 
-            return Response({"token": token.key}, status=status.HTTP_201_CREATED)
+            return Response({
+                    "token": token.key,
+                    "username": user.username
+            }, status=status.HTTP_200_OK)
         else:
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
