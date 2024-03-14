@@ -25,15 +25,18 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Assuming you have a user with username 'arthur2'
         User = get_user_model()
-        try:
-            user = User.objects.get(username='arthur2')
-        except User.DoesNotExist:
-            print('User "arthur2" does not exist. Please create this user and try again.')
-            return
+        # Check if the user exists, otherwise create it
+        user, created = User.objects.get_or_create(username='arthur2')
+        if created:
+            user.set_password('147258@@@')  # Set the password for the new user
+            user.save()
+            print('User "arthur2" has been created.')
+        else:
+            print('User "arthur2" already exists, no need to creat.')
 
         start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)
         
-        for day in range(30):  # Generate data for each day in the month
+        for day in range(60):  # Generate data for each day in the month
             day_date = start_date + timedelta(days=day)
             daily_total = 0
             while daily_total < 2000:  # Ensure at least 2000ml intake per day
@@ -43,4 +46,5 @@ class Command(BaseCommand):
                 daily_total += intake_amount
 
         print('Successfully generated water intake data for one month.')
+
 
