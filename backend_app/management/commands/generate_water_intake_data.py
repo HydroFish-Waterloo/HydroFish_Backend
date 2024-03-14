@@ -36,7 +36,8 @@ class Command(BaseCommand):
 
         start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=30)
         
-        for day in range(60):  # Generate data for each day in the month
+        how_many_days = 60
+        for day in range(how_many_days):  # Generate data for each day in the month
             day_date = start_date + timedelta(days=day)
             daily_total = 0
             while daily_total < 2000:  # Ensure at least 2000ml intake per day
@@ -45,6 +46,6 @@ class Command(BaseCommand):
                 WaterIntake.objects.create(user=user, date=make_aware(intake_time), water_amount=intake_amount)
                 daily_total += intake_amount
 
-        print('Successfully generated water intake data for one month.')
+        print('Successfully generated water intake data for', f'{how_many_days}', 'days.')
 
 
