@@ -40,11 +40,15 @@ from django.db.models import Sum
 from django.db.models.functions import TruncDay
 from datetime import timedelta
 
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
 def csrf_token(request):
     return JsonResponse({'csrfToken': get_token(request)})
 
-
+# user record one record intake data, insert a line in WaterIntake Table
+# data: user|date| water_amount
 @api_view(['POST'])
 def record_intake(request):
     try:
@@ -116,10 +120,24 @@ def get_monthly_water_intake(request):
 
 
 class GetFishNumber(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     @csrf_exempt
     def get(self, request):
-        return JsonResponse({'status': 'success', 'fish_numbers': 999})
+        try:
+            user_level = UserLevel.objects.get(user=request.user).level
+        except UserLevel.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+
+        fish_numbers = {'level1_fish': 0, 'level2_fish': 0, 'level3_fish': 0, 'level4_fish': 0, 'level5_fish': 0}
+        fish_numbers['level1_fish'] = user_level
+
+        for level in range(1, 5):
+            while fish_numbers[f'level{level}_fish'] >= 3:
+                fish_numbers[f'level{level}_fish'] -= 3
+                fish_numbers[f'level{level+1}_fish'] += 1
+
+        return JsonResponse({'status': 'success', 'fish_numbers': fish_numbers})
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -134,3 +152,37 @@ def level_up(request):
     except Exception as e:  # Catching generic exception to handle unexpected errors
         return JsonResponse({'status': 'error', 'message': 'An error occurred: ' + str(e)}, status=400)
     
+
+# end point:  \post_sync_level
+#      -H "Authorization: Token YOURTOKEN" \
+#      -H "Content-Type: application/json" \
+#      -d '{"level": 2}'
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_sync_level(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    requested_level = request.data.get('level')
+    if requested_level is None: # the level is 1 by default
+        return Response({"error": "Level not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:# convert user input to integral data
+        requested_level = int(requested_level)
+    except ValueError:
+        return Response({"error": "Invalid level format"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # check data range
+    if requested_level < 1:
+        return Response({"error": "Level < 1"}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})
+    
+    if requested_level < user_level.level:
+        return Response({"error": "Cannot decrease level", "level": user_level.level}, status=status.HTTP_403_FORBIDDEN)
+    else:
+        user_level.level = requested_level
+        user_level.save()
+        return Response({"success": "Level updated successfully", "level": requested_level})
+
