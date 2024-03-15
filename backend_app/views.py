@@ -50,6 +50,7 @@ def csrf_token(request):
 # user record one record intake data, insert a line in WaterIntake Table
 # data: user|date| water_amount
 @api_view(['POST'])
+@permission_classes([IsAuthenticated]) #only authorized users can write to database.
 def record_intake(request):
     try:
         data = request.data
@@ -161,8 +162,6 @@ def level_up(request):
 @permission_classes([IsAuthenticated])
 def post_sync_level(request):
     user = request.user
-    if not user.is_authenticated:
-        return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
 
     requested_level = request.data.get('level')
     if requested_level is None: # the level is 1 by default
