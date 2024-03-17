@@ -12,8 +12,8 @@ from . import views
 
 urlpatterns = [
     path("csrf/", views.csrf_token, name="csrf"),
-    path("getwaterhistory/", views.get_water_history, name="waterintake"),
-    path("getfishnumber/", views.get_fish_number, name="getfishnumber"),
+    path("getwaterhistory/", views.GetWaterHistory.as_view(), name="waterintake"),
+    path("getfishnumber/", views.GetFishNumber.as_view(), name="getfishnumber"),
     path("recordintake/", views.record_intake, name="recordwater"),
     path("levelup/", views.level_up, name="levelup"),
 ]
