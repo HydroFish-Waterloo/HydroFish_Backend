@@ -3,7 +3,7 @@ from django.conf import settings
 
 class WaterIntake(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date = date = models.DateTimeField()
+    date = models.DateTimeField()
     water_amount = models.IntegerField()
 
     def __str__(self):

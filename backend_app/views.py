@@ -35,76 +35,90 @@ from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
+from django.db.models import Sum
+from django.db.models.functions import TruncDay
+from datetime import timedelta
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
 def csrf_token(request):
     return JsonResponse({'csrfToken': get_token(request)})
 
-class GetWaterHistory(APIView):
-    permission_classes = [IsAuthenticated]
+# user record one record intake data, insert a line in WaterIntake Table
+# data: user|date| water_amount
+@api_view(['POST'])
+@permission_classes([IsAuthenticated]) #only authorized users can write to database.
+def record_intake(request):
+    try:
+        data = request.data
+        date = data['date']
+        water_amount = data['water_amount']
+    except (ValueError, KeyError):
+        return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+    WaterIntake.objects.create(user=request.user, date=date, water_amount=water_amount)
+    return JsonResponse({'status': 'success', 'message': 'Water intake record created successfully'})
 
-    @csrf_exempt
-    def get(self, request):
-        date_str = request.GET.get('date', None)
+# fetch 3 days history data
+# endpoint: /api/get_history_3days
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_3days_water_intake(request):
+    """Create an endpoint to return the last 3 days of water intake data, aggregated by day."""
+    today = timezone.now().date()
+    a_week_ago = today - timezone.timedelta(days=3)
+    data = WaterIntake.objects.filter(user=request.user, date__date__range=[a_week_ago, today]) \
+                              .annotate(day=TruncDay('date')) \
+                              .values('day') \
+                              .annotate(total_ml=Sum('water_amount')) \
+                              .order_by('day')
 
-        if date_str:
-            try:
-                date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
-        else:
-            return JsonResponse({'status': 'error', 'message': 'Date parameter is required.'}, status=400)
+    if not data:
+        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 3 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
-        start_date = date - timedelta(days=90)
-        end_date = datetime.combine(date, datetime.max.time())
-        water_intake_records = WaterIntake.objects.filter(
-            user=request.user, 
-            date__gte=start_date, 
-            date__lte=end_date
-        ).order_by('date')
-                
-        if not water_intake_records.exists():
-            return JsonResponse({'status': 'success', 'intake_records': []})
+# fetch weekly(last 7 dyas) history data
+# endpoint: /api/get_history_weekly/
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_weekly_water_intake(request):
+    """Create an endpoint to return the last 7 days of water intake data, aggregated by day."""
+    today = timezone.now().date()
+    a_week_ago = today - timezone.timedelta(days=7)
+    data = WaterIntake.objects.filter(user=request.user, date__date__range=[a_week_ago, today]) \
+                              .annotate(day=TruncDay('date')) \
+                              .values('day') \
+                              .annotate(total_ml=Sum('water_amount')) \
+                              .order_by('day')
 
-        intake_records = {
-            record.date.astimezone(timezone.get_current_timezone()).strftime("%a %b %d %H:%M:%S %Y %z"): record.water_amount
-            for record in water_intake_records
-        }
-        
-        return JsonResponse({'status': 'success', 'hitsory': intake_records}, safe=False)
+    if not data:
+        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 7 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
-# class GetWaterHistory(APIView):
-#     permission_classes = [IsAuthenticated]
 
-#     @csrf_exempt
-#     def get(self, request):
-#         date_str = request.GET.get('date', None)
+# returns the monthly water intake data for the logged-in user.
+# endpoint: /api/get_history_monthly/
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_monthly_water_intake(request):
+    """Create an endpoint to return the last 30 days of water intake data, aggregated by day."""
+    today = timezone.now().date()
+    a_month_ago = today - timezone.timedelta(days=30)
+    data = WaterIntake.objects.filter(user=request.user, date__date__range=[a_month_ago, today]) \
+                              .annotate(day=TruncDay('date')) \
+                              .values('day') \
+                              .annotate(total_ml=Sum('water_amount')) \
+                              .order_by('day')
 
-#         if date_str:
-00#                 date = datetime.strptime(date_str, '%Y-%m-%d').date()
-#             except ValueError:
-#                 return JsonResponse({'status': 'error', 'message': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
-#         else:
-#             return JsonResponse({'status': 'error', 'message': 'Date parameter is required.'}, status=400)
+    if not data:
+        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 30 days', 'data': []})
+    else:
+        return JsonResponse({'status': 'success', 'data': list(data)})
 
-#         start_date = date - timedelta(days=90)
-#         end_date = datetime.combine(date, datetime.max.time())
-#         water_intake_records = WaterIntake.objects.filter(
-#             user=request.user, 
-#             date__gte=start_date, 
-#             date__lte=end_date
-#         ).order_by('date')
-                
-#         if not water_intake_records.exists():
-#             return JsonResponse({'status': 'success', 'intake_records': []})
-
-#         intake_records = [
-#             {
-#                 'date': record.date.strftime('%Y-%m-%d'),
-#                 'water_amount': record.water_amount
-#             } for record in water_intake_records
-#         ]
-        
-#         return JsonResponse({'status': 'success', 'intake_records': intake_records}, safe=False)
 
 class GetFishNumber(APIView):
     permission_classes = [IsAuthenticated]
@@ -125,30 +139,48 @@ class GetFishNumber(APIView):
 
         return JsonResponse({'status': 'success', 'fish_numbers': fish_numbers})
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def record_intake(request):
-    try:
-        data = request.data
-        date = data['date']
-        water_amount = data['water_amount']
-    except (ValueError, KeyError):
-        return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
 
-    WaterIntake.objects.create(user=request.user, date=date, water_amount=water_amount)
-    
-    return JsonResponse({'status': 'success', 'message': 'Water intake record created successfully'})
 
+# end point:  \level_up
+#      -H "Authorization: Token YOURTOKEN" \
+#      -H "Content-Type: application/json" \
+#      -d '{"level": 2}'
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def level_up(request):
-    try:
-        updated_rows = UserLevel.objects.filter(user=request.user).update(level=F('level') + 1)
-        
-        if updated_rows:
-            return JsonResponse({'status': 'success', 'message': 'User level up successfully'})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
-    except Exception as e:  # Catching generic exception to handle unexpected errors
-        return JsonResponse({'status': 'error', 'message': 'An error occurred: ' + str(e)}, status=400)
+    user = request.user
+    requested_level = request.data.get('level')
     
+    if requested_level is None: # 'level' must be provided as a parameter
+        return Response({'status': 'error', 
+                         "message": "'level' is not provided"}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+    try:# convert user input to integral data
+        requested_level = int(requested_level)
+    except ValueError:
+        return Response({'status': 'error', 
+                         "message": "Invalid level format, not an integral"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
+    
+    # check data range, the 'level' parameter must be >= 1
+    if requested_level < 1:
+        return Response({'status': 'error', 
+                         "message": "'level' must >= 1"}, 
+                         status=status.HTTP_400_BAD_REQUEST)
+
+    user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})#get 'level' from database
+    
+    #if frontend has lower level than backend, 
+    if requested_level < user_level.level:
+        return Response({'status': 'success',
+                         "message": "Front has a lower level than backend, return value in backend.", 
+                         "level": user_level.level})
+    else:     # if front level has a higher level, use this one
+        user_level.level = requested_level
+        user_level.save()
+        return Response({'status': 'success',
+                         "message": "'level' updated successfully", 
+                         "level": user_level.level})
+
