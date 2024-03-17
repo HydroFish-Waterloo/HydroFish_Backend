@@ -1,22 +1,21 @@
 # (SRS) Requirement for backend
 
 
-1. [from history page](#1-for-history-page)
-
+- [(SRS) Requirement for backend](#srs-requirement-for-backend)
+  - [1. for history page](#1-for-history-page)
+  - [2. for login](#2-for-login)
+  - [3. for registering](#3-for-registering)
+  - [4. for set fish level/score](#4-for-set-fish-levelscore)
+  
 
 ## 1. for history page
-
-<table>
-    <tr>
-        <th>input</th>
-        <th>output</th>
-    </tr>
-    <tr>
-        <td>
-            <pre><code>GET http://localhost:8000/hydrofish/get_history_monthly/</code></pre>
-        </td>
-        <td>
-            <pre><code>{
+History page only get data form backend. 
+Request:
+```
+GET http://localhost:8000/hydrofish/get_history_monthly/
+```
+Response: the backend will return 30 days of data in the following format.
+```
     "status": "success",
     "data": [
         {
@@ -31,8 +30,22 @@
             "total_ml": 2062
         }
     ]
-}</code></pre>
-        </td>
-    </tr>
-</table>
+```
 
+## 2. for login
+The frontend issue a post request:
+```
+```
+The backend will response:
+```
+```
+
+## 3. for registering
+The frontend post a request with username and password
+```
+```
+The backend will response
+```
+```
+
+## 4. for set fish level/score

@@ -151,7 +151,9 @@ def level_up(request):
         else:
             return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
     except Exception as e:  # Catching generic exception to handle unexpected errors
-        return JsonResponse({'status': 'error', 'message': 'An error occurred: ' + str(e)}, status=400)
+        return JsonResponse({'status': 'error', 
+                             'message': 'An error occurred: ' + str(e)}, 
+                             status=400)
     
 
 # end point:  \post_sync_level
@@ -162,26 +164,40 @@ def level_up(request):
 @permission_classes([IsAuthenticated])
 def post_sync_level(request):
     user = request.user
-
     requested_level = request.data.get('level')
+
+    # if not provide a level data, the level will increase by ONE.
     if requested_level is None: # the level is 1 by default
-        return Response({"error": "Level not provided"}, status=status.HTTP_400_BAD_REQUEST)
+        user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})#get 'level' from database
+        user_level.level = user_level.level + 1 # level up
+        user_level.save()
+        return Response({'status': 'success', 
+                         "message": "Level up successfully",
+                         "level": user_level.level})
 
     try:# convert user input to integral data
         requested_level = int(requested_level)
     except ValueError:
-        return Response({"error": "Invalid level format"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'error', 
+                         "message": "Invalid level format, not an integral"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
     
-    # check data range
+    # check data range, the 'level' parameter must be >= 1
     if requested_level < 1:
-        return Response({"error": "Level < 1"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status': 'error', 
+                         "message": "Level must >= 1"}, 
+                         status=status.HTTP_400_BAD_REQUEST)
 
-    user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})
+    user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})#get 'level' from database
     
     if requested_level < user_level.level:
-        return Response({"error": "Cannot decrease level", "level": user_level.level}, status=status.HTTP_403_FORBIDDEN)
+        return Response({'status': 'error',
+                         "message": "Cannot decrease level", 
+                         "level": user_level.level}, status=status.HTTP_403_FORBIDDEN)
     else:
         user_level.level = requested_level
         user_level.save()
-        return Response({"success": "Level updated successfully", "level": requested_level})
+        return Response({'status': 'success',
+                         "message": "Level updated successfully", 
+                         "level": user_level.level})
 
