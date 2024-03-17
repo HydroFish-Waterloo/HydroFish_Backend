@@ -68,7 +68,7 @@ If you don't provide the 'level' parameter, you get an error.
 
 ### case 2
 If you don't give the right 'level' data, an error raises.
-> ![case21](/DOCUMENTS/pictures/22.png)
+> ![case21](/DOCUMENTS/pictures/42.png)
 
 'level' must be a value >= 1.
 > ![cass22](/DOCUMENTS/pictures/31.png)
@@ -78,5 +78,5 @@ If you provide a 'level' higher than the data in database, your 'level' paramete
 > ![case3](/DOCUMENTS/pictures/33.png)
 
 ### case 4
-If you provide a 'level' lower than the data in database, your request will still be accepted, also backend will tell your the current level value.
-> ![case4](/DOCUMENTS/pictures/34.png)
+If you provide a 'level' lower than the data in database, your request will still be accepted, also backend will tell you the current level value.
+> ![case4](/DOCUMENTS/pictures/41.png)

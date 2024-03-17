@@ -176,7 +176,7 @@ def level_up(request):
     if requested_level < user_level.level:
         return Response({'status': 'success',
                          "message": "Front has a lower level than backend, return value in backend.", 
-                         "level": user_level.level}, status=status.HTTP_403_FORBIDDEN)
+                         "level": user_level.level})
     else:     # if front level has a higher level, use this one
         user_level.level = requested_level
         user_level.save()
