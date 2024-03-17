@@ -17,7 +17,7 @@ urlpatterns = [
     path("recordintake/", views.record_intake, name="recordwater"),
     path("getfishnumber/", views.GetFishNumber.as_view(), name="getfishnumber"),
     path("levelup/", views.level_up, name="levelup"),
-    path("post_sync_level/", views.post_sync_level, name="post_sync_level"),
+    #path("post_sync_level/", views.post_sync_level, name="post_sync_level"),
     
     ## for 'history' page
     path("get_history_3days/", views.get_3days_water_intake, name="get_3days_water_intake"), #get 3-days data (all are most recent days)

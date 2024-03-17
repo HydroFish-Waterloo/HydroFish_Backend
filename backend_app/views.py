@@ -140,40 +140,22 @@ class GetFishNumber(APIView):
         return JsonResponse({'status': 'success', 'fish_numbers': fish_numbers})
 
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def level_up(request):
-    try:
-        updated_rows = UserLevel.objects.filter(user=request.user).update(level=F('level') + 1)
-        
-        if updated_rows:
-            return JsonResponse({'status': 'success', 'message': 'User level up successfully'})
-        else:
-            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
-    except Exception as e:  # Catching generic exception to handle unexpected errors
-        return JsonResponse({'status': 'error', 
-                             'message': 'An error occurred: ' + str(e)}, 
-                             status=400)
-    
 
-# end point:  \post_sync_level
+# end point:  \level_up
 #      -H "Authorization: Token YOURTOKEN" \
 #      -H "Content-Type: application/json" \
 #      -d '{"level": 2}'
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def post_sync_level(request):
+def level_up(request):
     user = request.user
     requested_level = request.data.get('level')
+    
+    if requested_level is None: # 'level' must be provided as a parameter
+        return Response({'status': 'error', 
+                         "message": "'level' is not provided"}, 
+                        status=status.HTTP_400_BAD_REQUEST)
 
-    # if not provide a level data, the level will increase by ONE.
-    if requested_level is None: # the level is 1 by default
-        user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})#get 'level' from database
-        user_level.level = user_level.level + 1 # level up
-        user_level.save()
-        return Response({'status': 'success', 
-                         "message": "Level up successfully",
-                         "level": user_level.level})
 
     try:# convert user input to integral data
         requested_level = int(requested_level)
@@ -185,19 +167,20 @@ def post_sync_level(request):
     # check data range, the 'level' parameter must be >= 1
     if requested_level < 1:
         return Response({'status': 'error', 
-                         "message": "Level must >= 1"}, 
+                         "message": "'level' must >= 1"}, 
                          status=status.HTTP_400_BAD_REQUEST)
 
     user_level, created = UserLevel.objects.get_or_create(user=user, defaults={'level': 1})#get 'level' from database
     
+    #if frontend has lower level than backend, 
     if requested_level < user_level.level:
-        return Response({'status': 'error',
-                         "message": "Cannot decrease level", 
+        return Response({'status': 'success',
+                         "message": "Front has a lower level than backend, return value in backend.", 
                          "level": user_level.level}, status=status.HTTP_403_FORBIDDEN)
-    else:
+    else:     # if front level has a higher level, use this one
         user_level.level = requested_level
         user_level.save()
         return Response({'status': 'success',
-                         "message": "Level updated successfully", 
+                         "message": "'level' updated successfully", 
                          "level": user_level.level})
 
