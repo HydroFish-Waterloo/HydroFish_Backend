@@ -16,7 +16,7 @@ urlpatterns = [
     ## for 'main' page
     path("recordintake/", views.record_intake, name="recordwater"),
     path("getfishnumber/", views.GetFishNumber.as_view(), name="getfishnumber"),
-    path("levelup/", views.level_up, name="levelup"),
+    path("levelup/", views.level_up, name="level_up"),
     
     ## for 'history' page
     path("get_history_3days/", views.get_3days_water_intake, name="get_3days_water_intake"), #get 3-days data (all are most recent days)

@@ -32,10 +32,21 @@ def csrf_token(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated]) #only authorized users can write to database.
 def record_intake(request):
+    allowed_keys = {'date', 'water_amount'}         # Define a set of allowed keys
+    data_keys = set(request.data.keys())
+    if data_keys != allowed_keys:
+        return Response({"error": "Only 'date' and 'water_amount' fields are allowed"}, 
+                        status=status.HTTP_400_BAD_REQUEST)
     try:
         data = request.data
-        date = data['date']
+        date_str = data['date']
         water_amount = data['water_amount']
+        # Attempt to parse the date with the expected format 'YYYY-MM-DD'
+        try:
+            date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            raise ValueError("Incorrect date format, should be YYYY-MM-DD")
+        
     except (ValueError, KeyError):
         return JsonResponse({'status': 'error', 
                              'message': 'Invalid data'}, 
@@ -44,8 +55,9 @@ def record_intake(request):
     return JsonResponse({'status': 'success', 
                          'message': 'Water intake record created successfully'})
 
+
 # fetch 3 days history data
-# endpoint: /api/get_history_3days
+# endpoint: /get_history_3days
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_3days_water_intake(request):
@@ -66,7 +78,7 @@ def get_3days_water_intake(request):
                              'data': list(data)})
 
 # fetch weekly(last 7 dyas) history data
-# endpoint: /api/get_history_weekly/
+# endpoint: /get_history_weekly/
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_weekly_water_intake(request):
@@ -89,7 +101,7 @@ def get_weekly_water_intake(request):
 
 
 # returns the monthly water intake data for the logged-in user.
-# endpoint: /api/get_history_monthly/
+# endpoint: /get_history_monthly/
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_monthly_water_intake(request):
