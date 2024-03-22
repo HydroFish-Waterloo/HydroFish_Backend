@@ -19,8 +19,19 @@ from rest_framework.permissions import AllowAny
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]  # Allow unauthenticated users to access this view for registration
     def post(self, request, *args, **kwargs):
+        allowed_keys = {'username', 'password'}         # Define a set of allowed keys
+        data_keys = set(request.data.keys())
+        if data_keys != allowed_keys:
+            return Response({"error": "Only 'username' and 'password' fields are allowed"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
         username = request.data.get("username")
         password = request.data.get("password")
+        # Check if either username or password is missing
+        if not username or not password:
+            return Response({"error": "Username or password not provided"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
         user = authenticate(username=username, password=password)
         if user:
             token, created = Token.objects.get_or_create(user=user)
@@ -38,10 +49,20 @@ class RegisterAPIView(APIView):
     permission_classes = [AllowAny]  # Allow unauthenticated users to access this view for registration
 
     def post(self, request, *args, **kwargs):
+        allowed_keys = {'username', 'password1', 'password2'}         # Define a set of allowed keys
+        data_keys = set(request.data.keys())
+        if data_keys != allowed_keys:
+            return Response({"error": "Only 'username' and 'password1/2' fields are allowed"}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
         username = request.data.get("username")
         password1 = request.data.get("password1")
         password2 = request.data.get("password2")
-        
+
+        if not username or not password1 or not password2:
+            return Response({"error": "Username or password1/2 not provided"}, 
+                            status=status.HTTP_400_BAD_REQUEST)        
+
         form_data = {
             'username': username,
             'password1': password1,
