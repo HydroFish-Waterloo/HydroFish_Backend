@@ -45,18 +45,36 @@ Return data format:
 ## 2. for login 
 The frontend issue a post request:
 ```
+users/api/login/
+    username:arthur2
+    password:147258@@@
 ```
 The backend will response:
+```json
+{
+    "token": "dfcd5e3ace8157a95fb38c2098e5f568234e4396",
+    "username": "arthur2"
+}
 ```
-```
+>![register](/DOCUMENTS/pictures/71.png)
+
 
 ## 3. for registering
 The frontend post a request with username and password
 ```
+users/api/register/
+    username:arthur30
+    password1:147258@@@
+    password2:147258@@@
 ```
 The backend will response
+```json
+{
+    "token": "2728cc03c4939fb103c31618e3ab2ca55392b1f2",
+    "username": "arthur30"
+}
 ```
-```
+>![register](/DOCUMENTS/pictures/72.png)
 
 ## 4. for set fish level/score [tested]
 Endpoint:
