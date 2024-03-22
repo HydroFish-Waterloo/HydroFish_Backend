@@ -23,4 +23,8 @@ urlpatterns = [
     path("get_history_weekly/", views.get_weekly_water_intake, name="get_weekly_water_intake"), #get 7-days data
     path("get_history_monthly/", views.get_monthly_water_intake, name="get_monthly_water_intake"),#get 30-days data
 
+    ## for 'settings' page
+    path("getsettings/", views.get_settings, name="get_settings"),
+    path("setsettings/", views.set_settings, name="set_settings"),
+
 ]

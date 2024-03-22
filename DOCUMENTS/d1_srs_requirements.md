@@ -2,27 +2,30 @@
 
 
 - [(SRS) Requirement for backend](#srs-requirement-for-backend)
-  - [1. for history page](#1-for-history-page)
+  - [1. for history page \[tested\]](#1-for-history-page-tested)
   - [2. for login](#2-for-login)
   - [3. for registering](#3-for-registering)
-  - [4. for set fish level/score](#4-for-set-fish-levelscore)
+  - [4. for set fish level/score \[tested\]](#4-for-set-fish-levelscore-tested)
     - [case 1](#case-1)
     - [case 2](#case-2)
     - [case 3](#case-3)
     - [case 4](#case-4)
+  - [5. for recording intake in main page \[tested\]](#5-for-recording-intake-in-main-page-tested)
+  - [6. for settings page \[tested\]](#6-for-settings-page-tested)
   
 
-## 1. for history page
-History page only get data form backend. 
-Request:
-```
-GET http://localhost:8000/hydrofish/get_history_monthly/
-```
-Response: the backend will return 30 days of data in the following format.
+## 1. for history page [tested]
+History page only `GET` data form backend. 
+| Endpoint | Input | Output|
+|:--|:--|:--|
+|GET <br> http://localhost:8000/hydrofish/get_history_monthly/ | not needed | the backend will return 30 days of data in the following format.
 
+Example:
 > ![historypage](/DOCUMENTS/pictures/14.png)
 
-```
+
+Return data format:
+```json
     "status": "success",
     "data": [
         {
@@ -39,7 +42,7 @@ Response: the backend will return 30 days of data in the following format.
     ]
 ```
 
-## 2. for login
+## 2. for login 
 The frontend issue a post request:
 ```
 ```
@@ -55,7 +58,7 @@ The backend will response
 ```
 ```
 
-## 4. for set fish level/score
+## 4. for set fish level/score [tested]
 Endpoint:
 ```
 hydrofish\levelup
@@ -80,3 +83,35 @@ If you provide a 'level' higher than the data in database, your 'level' paramete
 ### case 4
 If you provide a 'level' lower than the data in database, your request will still be accepted, also backend will tell you the current level value.
 > ![case4](/DOCUMENTS/pictures/41.png)
+
+
+## 5. for recording intake in main page [tested]
+
+```
+hydrofish\recordintake
+      -H "Authorization: Token YOURTOKEN" \
+      -d '{"data": 2048-03-30, "water_amount": 300}'
+```
+
+> ![record](/DOCUMENTS/pictures/51.png)
+
+
+## 6. for settings page [tested]
+Backend has two endpoints for frontend:
+|Endpoint  | Input  | Output |
+|:--|:--|:--|
+|/getsettings/ | not needed | return data like: {"wakeup_time": "07:00:00", "sleep_time": "23:00:00","interval": 30 }
+|/setsettings/ | new data like: {"wakeup_time": "07:00:00", "sleep_time": "23:00:00","interval": 30 } | "status": 'success' (or 'error')
+
+**Examples**  
+
+
+[1] When there is no data in database, an error will return
+> ![get-error](/DOCUMENTS/pictures/61.png)
+
+[2] Setting data to backend
+> ![set-ok](/DOCUMENTS/pictures/62.png)
+
+[3] Getting data from backend
+> ![get-ok](/DOCUMENTS/pictures/63.png)
+

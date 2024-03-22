@@ -1,23 +1,3 @@
-# from django.shortcuts import render
-
-# # Create your views here.
-# from rest_framework import status
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-# from .models import WaterIntake
-# from .serializers import WaterIntakeSerializer
-
-# class WaterIntakeCreateAPIView(APIView):
-#     def post(self, request, *args, **kwargs):
-#         # Set user_id to 0 by default
-#         request.data['user_id'] = 0
-        
-#         serializer = WaterIntakeSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -29,7 +9,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.middleware.csrf import get_token
 
-from .models import UserLevel, WaterIntake
+from .models import UserLevel, WaterIntake, Notification
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
@@ -57,9 +37,12 @@ def record_intake(request):
         date = data['date']
         water_amount = data['water_amount']
     except (ValueError, KeyError):
-        return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+        return JsonResponse({'status': 'error', 
+                             'message': 'Invalid data'}, 
+                             status=400)
     WaterIntake.objects.create(user=request.user, date=date, water_amount=water_amount)
-    return JsonResponse({'status': 'success', 'message': 'Water intake record created successfully'})
+    return JsonResponse({'status': 'success', 
+                         'message': 'Water intake record created successfully'})
 
 # fetch 3 days history data
 # endpoint: /api/get_history_3days
@@ -76,9 +59,11 @@ def get_3days_water_intake(request):
                               .order_by('day')
 
     if not data:
-        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 3 days', 'data': []})
+        return JsonResponse({'status': 'success', 
+                             'message': 'No water intake records found for the last 3 days', 'data': []})
     else:
-        return JsonResponse({'status': 'success', 'data': list(data)})
+        return JsonResponse({'status': 'success', 
+                             'data': list(data)})
 
 # fetch weekly(last 7 dyas) history data
 # endpoint: /api/get_history_weekly/
@@ -95,9 +80,12 @@ def get_weekly_water_intake(request):
                               .order_by('day')
 
     if not data:
-        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 7 days', 'data': []})
+        return JsonResponse({'status': 'success', 
+                             'message': 'No water intake records found for the last 7 days', 
+                             'data': []})
     else:
-        return JsonResponse({'status': 'success', 'data': list(data)})
+        return JsonResponse({'status': 'success', 
+                             'data': list(data)})
 
 
 # returns the monthly water intake data for the logged-in user.
@@ -115,9 +103,12 @@ def get_monthly_water_intake(request):
                               .order_by('day')
 
     if not data:
-        return JsonResponse({'status': 'success', 'message': 'No water intake records found for the last 30 days', 'data': []})
+        return JsonResponse({'status': 'success', 
+                             'message': 'No water intake records found for the last 30 days', 
+                             'data': []})
     else:
-        return JsonResponse({'status': 'success', 'data': list(data)})
+        return JsonResponse({'status': 'success', 
+                             'data': list(data)})
 
 
 class GetFishNumber(APIView):
@@ -127,7 +118,9 @@ class GetFishNumber(APIView):
         try:
             user_level = UserLevel.objects.get(user=request.user).level
         except UserLevel.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'User not found'}, status=404)
+            return JsonResponse({'status': 'error', 
+                                 'message': 'User not found'}, 
+                                 status=404)
 
         fish_numbers = {'level1_fish': 0, 'level2_fish': 0, 'level3_fish': 0, 'level4_fish': 0, 'level5_fish': 0}
         fish_numbers['level1_fish'] = user_level
@@ -137,13 +130,13 @@ class GetFishNumber(APIView):
                 fish_numbers[f'level{level}_fish'] -= 3
                 fish_numbers[f'level{level+1}_fish'] += 1
 
-        return JsonResponse({'status': 'success', 'fish_numbers': fish_numbers})
+        return JsonResponse({'status': 'success', 
+                             'fish_numbers': fish_numbers})
 
 
 
 # end point:  \level_up
 #      -H "Authorization: Token YOURTOKEN" \
-#      -H "Content-Type: application/json" \
 #      -d '{"level": 2}'
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -183,4 +176,52 @@ def level_up(request):
         return Response({'status': 'success',
                          "message": "'level' updated successfully", 
                          "level": user_level.level})
+
+
+# end point:  \setsettings
+#      -H "Authorization: Token YOURTOKEN" \
+#      -d '{"wakeup_time": "07:00:00",    "sleep_time": "23:00:00",    "interval": 60}'
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def set_settings(request):
+    try:
+        user = request.user
+        wakeup_time = request.data['wakeup_time']
+        sleep_time = request.data['sleep_time']
+        interval = int(request.data['interval'])
+    except (ValueError, KeyError):
+        return JsonResponse({'status': 'error', 
+                             'message': 'Invalid or missing data'}, 
+                             status=400)
+    
+    # Create or update the user's notification settings
+    Notification.objects.update_or_create(
+        user=user,
+        defaults={'wakeup_time': wakeup_time, 'sleep_time': sleep_time, 'interval': interval}
+    )
+    
+    return JsonResponse({'status': 'success', 
+                         'message': 'Settings updated successfully'})
+
+
+# end point:  \getsettings
+#      -H "Authorization: Token YOURTOKEN" \
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_settings(request):
+    user = request.user
+    try:
+        notification_settings = Notification.objects.get(user=user)
+        settings_data = {
+            'wakeup_time': notification_settings.wakeup_time,
+            'sleep_time': notification_settings.sleep_time,
+            'interval': notification_settings.interval,
+        }
+        return JsonResponse({'status': 'success', 
+                             'data': settings_data})
+    except Notification.DoesNotExist:
+        return JsonResponse({'status': 'error', 
+                             'message': 'Settings not found'}, status=404)
+
+
 
