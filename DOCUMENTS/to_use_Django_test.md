@@ -2,14 +2,23 @@
 Reference:
 https://www.django-rest-framework.org/api-guide/testing/
 
-
+## 1
 To run the test, use the Django test command:
 ```bash
 python manage.py test -v 1
 ```
 > The `-v 1` is for more details displayed, usage: `-v {0,1,2,3}`. 
 
+## 2
+To test with coverage report, run:
+```bash
+coverage run manage.py test
+coverage report
+```
+<br>
+<br>
 
+----
 
 
 | Function to be tested|  Method | Stratage |
